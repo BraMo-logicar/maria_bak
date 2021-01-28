@@ -1,0 +1,53 @@
+# maria_bak
+
+[source]
+--------------------------------------------------------------------------
+# Name: maria_bak - MySql/MariaDb backup
+# Usage:
+#     maria_bak [ --help ] [ --Help ]
+#         [ -h|--host <host> ] [ -P|--port <port> ]
+#         [ -u|--user <user> ] [ -p|--password <password> ]
+#         [ -D|--databases <dbs> ]* [ -s|--schema|--no-schema ]
+#         [ -o|--options <mydumpopts> ]
+#         [ --bakdir <dir> ] [ -z|--gzip ] [ --bzip2 ] [ --xz ]
+# Options:
+#     --help                    : print usage
+#     --Help                    : print description
+#     -h|--host <host>          : db host  [localhost]
+#     -P|--port <port>          : db port  [3306]
+#     -u|--user <user>          : db user  [root]
+#     -p|--password <password>  : db password
+#     -D|--databases <dbs>      : db(s) to backup  [all]
+#                                 <dbs> : <db>(,<db>)*
+#     -s|--schema|--no-schema   : include|exclude schema tables
+[exclude]
+#     -o|--options <mydumpopts> : mariadump options  []
+#     --bakdir <dir>            : backup destination directory  [.]
+#     -z|--gzip                 : compress via gzip  [no]
+#     --bzip2                   : compress via bzip2  [no]
+#     --xz                      : compress via xz  [no]
+# Author: Marco Broglia (marco.broglia@mutex.it)
+# Date: 2021.01.28
+--------------------------------------------------------------------------
+
+Feature
+~~~~~~~
+
+* local and remote MySql and MariaDb dump
+* dump single, multiple, all databases
+* include or exclude schema tables
+* `gzip` or `bzip2` or `xz` compression (or no compression)
+* logging
+- database
+- database statistics
+
+My quotes (and Maria quotes)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+[quote,BraMo]
+`My` backup or `Maria` backup: the `Max` priority.
+
+Links
+^^^^^
+
+* Mysqldump:  https://mariadb.com/kb/en/mysqldump/
