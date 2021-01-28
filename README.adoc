@@ -45,9 +45,9 @@ My quotes (and Maria quotes)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 [quote,BraMo]
-`My` backup or `Maria` backup: the `Max` priority.
+`My` backup or `Maria` backup ? The `Max` priority.
 
 Links
 ^^^^^
 
-* Mysqldump:  https://mariadb.com/kb/en/mysqldump/
+* mysqldump:  https://mariadb.com/kb/en/mysqldump/
