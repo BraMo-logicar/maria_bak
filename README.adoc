@@ -19,8 +19,7 @@
 #     -p|--password <password>  : db password
 #     -D|--databases <dbs>      : db(s) to backup  [all]
 #                                 <dbs> : <db>(,<db>)*
-#     -s|--schema|--no-schema   : include|exclude schema tables
-[exclude]
+#     -s|--schema|--no-schema   : include|exclude schema tables  [exclude]
 #     -o|--options <mydumpopts> : mariadump options  []
 #     --bakdir <dir>            : backup destination directory  [.]
 #     -z|--gzip                 : compress via gzip  [no]
