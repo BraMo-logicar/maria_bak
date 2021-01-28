@@ -1,0 +1,260 @@
+#! /usr/bin/bash
+
+# Name: maria_bak - MySql/MariaDb backup
+# Usage:
+#     maria_bak [ --help ] [ --Help ]
+#         [ -h|--host <host> ] [ -P|--port <port> ]
+#         [ -u|--user <user> ] [ -p|--password <password> ]
+#         [ -D|--databases <dbs> ]* [ -s|--schema|--no-schema ]
+#         [ -o|--options <mydumpopts> ]
+#         [ --bakdir <dir> ] [ -z|--gzip ] [ --bzip2 ] [ --xz ]
+# Options:
+#     --help                    : print usage
+#     --Help                    : print description
+#     -h|--host <host>          : db host  [localhost]
+#     -P|--port <port>          : db port  [3306]
+#     -u|--user <user>          : db user  [root]
+#     -p|--password <password>  : db password
+#     -D|--databases <dbs>      : db(s) to backup  [all]
+#                                 <dbs> : <db>(,<db>)*
+#     -s|--schema|--no-schema   : include|exclude schema tables  [exclude]
+#     -o|--options <mydumpopts> : mariadump options  []
+#     --bakdir <dir>            : backup destination directory  [.]
+#     -z|--gzip                 : compress via gzip  [no]
+#     --bzip2                   : compress via bzip2  [no]
+#     --xz                      : compress via xz  [no]
+# Author: Marco Broglia (marco.broglia@mutex.it)
+# Date: 2021.01.28
+
+#
+# vars
+#
+
+# progname
+
+command="$0"; [ $# -gt 0 ] && command="$command $*"
+progname=$(basename $0)
+
+# dirs & files
+
+home=/usr/local/maria_bak
+bakdir=/usr/local/backup/mariadb
+tmpdir=$home/tmp
+
+logf=$home/log/$progname.log
+
+# cmds
+
+mariadb=/usr/bin/mariadb
+mariadump=/usr/bin/mariadb-dump
+
+# localization
+
+LC_NUMERIC="C"
+
+# vars
+
+mydumpopts="--databases --events --routines --flush-logs"
+mydumpopts+=" --single-transaction --log-error $logf"
+
+# queries
+
+q_dblist="show databases"
+q_stat="select table_schema, engine, table_rows, data_length, index_length
+   from information_schema.tables where table_type = 'BASE TABLE'"
+
+#
+# funcs
+#
+
+now()   { date '+%Y.%m.%d-%H:%M:%S'; }
+log()   { echo "$(now) [$progname:$$] $*" >> $logf; }
+usage() { echo "$help"; }
+
+t()       { date +%s.%N; }
+elapsed() { printf "%.3f" $(echo "$2 - $1" | bc); }
+
+mb()  { awk '{ printf "%.3f", $1 / 2^20 }'; }
+
+# db stats
+
+dbstat() {
+    local db=$1
+    local nt ee
+
+    for e in $(awk -v db=$db '$1 == db { print $2 }' $stat | sort -u); do
+        n=$(awk -v db=$db -v e=$e '$1 == db && $2 == e' $stat | wc -l)
+        ((T[$e]+=$n)); ((nt+=$n))
+        ee+="${n-0} $e, "
+    done
+    [ $nt ] || return
+    read nr ds is <<< $(awk -v db=$db '$1 == db { nr+=$3; ds+=$4; is+=$5 }
+        END { print nr, ds, is }' $stat)
+    ee=${ee%, }
+    ((Nd++)); ((Nt+=$nt)); ((Nr+=$nr)); ((Ds+=$ds)); ((Is+=$is))
+
+    ds=$(echo $ds | mb) is=$(echo $is | mb)
+    log "database '$db':" \
+        "$nt tables ($ee), $nr rows, ${ds}m data size, ${is}m index size"
+}
+
+#
+# opts
+#
+
+help=$(sed -n '/^# Usage:/,/^# [^ ]/p' $0 | sed '$d;s/^# //')
+Help=$(sed -n '/^# Options:/,/^# [^ ]/p' $0 | sed '$d;s/^# //')
+
+OPTS=$(getopt -o h:P:u:p:D:so:z \
+    -l help,Help,host:,port:,user:,password:,databases:,schema,no-schema \
+    -l options:,bakdir:,gzip,bzip2,xz \
+    -n $progname -- "$@")
+eval set -- "$OPTS"
+
+while :; do
+    case "$1" in
+        --help)
+            echo "$help"; exit 0 ;;
+        --Help)
+            echo "$help"; echo "$Help"; exit 0 ;;
+        -h|--host)
+            host=$2; shift 2 ;;
+        -P|--port)
+            port=$2; shift 2 ;;
+        -u|--user)
+            user=$2; shift 2 ;;
+        -p|--password)
+            pass=$2; shift 2 ;;
+        -D|--databases)
+            dbs+=" $2"; shift 2 ;;
+        -s|--schema)
+            schema=y; shift ;;
+        --no-schema)
+            schema=n; shift ;;
+        -o|--options)
+            mydumpopts+=" $2"; shift 2 ;;
+        --bakdir)
+            bakdir=$2; shift 2 ;;
+        -z|--gzip)
+            comp=gzip; shift ;;
+        --bzip2)
+            comp=bzip2; shift ;;
+        --xz)
+            comp=xz; shift ;;
+        --)
+            shift; break ;;
+        *)
+            usage; exit 1 ;;
+    esac
+done
+dbs=${dbs# }
+
+# stdout & stderr
+
+if [ ! -t 0 ]; then
+    exec 1> >(while read log; do log "stdout: $log"; done)
+    exec 2> >(while read log; do log "stderr: $log"; done)
+fi
+
+#
+# main
+#
+
+# start
+
+t0=$(t)
+log "start '$progname' ('$command')"
+log "$($mariadb -V)"
+
+# myopts
+
+[ "$host" ] && myopts+=" -h $host"
+[ "$port" ] && myopts+=" -P $port"
+[ "$user" ] && myopts+=" -u $user"
+[ "$pass" ] && myopts+=" -p$pass"
+myopts=${myopts# }
+
+: ${schema:=n}
+
+opts="$myopts $mydumpopts"
+log "options: '${opts/# /}'"
+
+# dbs
+
+dbs0=$($mariadb $myopts -sN -e "$q_dblist" | sort | xargs)
+schemas=$(printf "%s\n" $dbs0 | grep '_schema$' | xargs)
+
+[ "$dbs" ] && dbs=${dbs//,/ } || dbs=$dbs0
+[ "$schema" = y ] && dbs+=" $schemas"
+[ "$schema" = n ] && dbs=$(printf "%s\n" $dbs | grep -v _schema$ | xargs)
+
+dbs=$(printf "%s\n" $dbs | sort -u | xargs)
+log "databases: '$dbs'"
+
+# backup area
+
+tbakdir=$bakdir/$(date +%Y.%m.%d-%H%M%S)
+mkdir -p $tbakdir
+log "backup dir: '$tbakdir'"
+
+# stat
+
+declare -A T0 T
+stat=$tmpdir/dbstat
+$mariadb $myopts -sN -e "$q_stat" | sort > $stat
+
+# dump
+
+for db in $dbs; do
+    if ! [[ " $dbs0 " =~ " $db " ]]; then
+        log "database '$db' unknown"
+        continue
+    fi
+
+    tt0=$(t)
+    $mariadump $myopts $mydumpopts $db > $tbakdir/$db.sql
+    tt1=$(t)
+    s=$(du -b $tbakdir/$db.sql | mb) t=$(elapsed $tt0 $tt1)
+
+    if [ "$comp" = gzip -o "$comp" = bzip2 -o "$comp" = xz ]; then
+        tt0=$(t); $comp $tbakdir/$db.sql; tt1=$(t)
+        sz=$(du -b $tbakdir/$db.sql.* | mb) tz=$(elapsed $tt0 $tt1)
+        tt=$(echo $t+$tz | bc)
+        log "database '$db' sql-dumped and $comp-compressed" \
+            "(size: ${s}m->${sz}m, elapsed: ${t}s+${tz}s=${tt}s)"
+    else
+        log "database '$db' sql-dumped (size: ${s}m, elapsed: ${t}s)"
+    fi
+
+    dbstat $db
+done
+
+# global stat
+
+Nd0=$(echo $dbs0 | wc -w)
+
+for e in $(cut -f2 $stat | sort -u); do
+    T0[$e]=$(awk -v e=$e '$2 == e' $stat | wc -l)
+done
+for e in $(echo ${!T0[@]} | sort); do
+    ee+="${T[$e]-0}/${T0[$e]} $e, "; ((Nt0+=${T0[$e]}))
+done
+ee=${ee%, }
+read Nr0 Ds0 Is0 <<< $(awk '{ nr+=$3; ds+=$4; is+=$5 }
+    END { print nr, ds, is }' $stat)
+
+Ds=$(echo $Ds | mb) Ds0=$(echo $Ds0 | mb)
+Is=$(echo $Is | mb) Is0=$(echo $Is0 | mb)
+log "stats (dumped/total): $Nd/$Nd0 databases, $Nt/$Nt0 tables ($ee)," \
+    "$Nr/$Nr0 rows, ${Ds}m/${Ds0}m data size, ${Is}m/${Is0}m index size"
+
+# end
+
+t1=$(t)
+log "elapsed time: $(elapsed $t0 $t1)s"
+
+log "end '$progname'"
+
+# exit
+
+exit 0
