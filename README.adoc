@@ -40,6 +40,8 @@ Feature
 - database
 - database statistics
 
+[red] test
+
 My quotes (and Maria quotes)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
