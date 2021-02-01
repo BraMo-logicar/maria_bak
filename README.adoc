@@ -1,4 +1,4 @@
-# maria_bak
+= maria_bak
 
 [source]
 ----
@@ -29,8 +29,7 @@
 # Date: 2021.01.28
 ----
 
-Features
-~~~~
+== Features
 
 * local and remote MySql and MariaDb dump
 * dump single, multiple, all databases
@@ -40,13 +39,11 @@ Features
 - database
 - database statistics
 
-My and Maria quotes
-^^^^
+== My and Maria quotes
 
 [quote,BraMo]
 `My` backup or `Maria` backup ? The `Max` priority.
 
-Links
-^^^^
+== Links
 
 * mysqldump:  https://mariadb.com/kb/en/mysqldump/
