@@ -46,4 +46,5 @@
 
 == Links
 
-* mysqldump:  https://mariadb.com/kb/en/mysqldump/
+* https://mariadb.com/kb/en/mysqldump/[mysqldump] - a database backup program
+* https://en.wikipedia.org/wiki/Michael_Widenius[Michael Widenius] - the main author of the original version
