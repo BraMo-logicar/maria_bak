@@ -1,7 +1,7 @@
-# maria_bak
+= maria_bak
 
 [source]
---------------------------------------------------------------------------
+----
 # Name: maria_bak - MySql/MariaDb backup
 # Usage:
 #     maria_bak [ --help ] [ --Help ]
@@ -27,10 +27,9 @@
 #     --xz                      : compress via xz  [no]
 # Author: Marco Broglia (marco.broglia@mutex.it)
 # Date: 2021.01.28
---------------------------------------------------------------------------
+----
 
-Feature
-~~~~~~~
+== Features
 
 * local and remote MySql and MariaDb dump
 * dump single, multiple, all databases
@@ -40,13 +39,12 @@ Feature
 - database
 - database statistics
 
-My quotes (and Maria quotes)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+== My and Maria quotes
 
 [quote,BraMo]
 `My` backup or `Maria` backup ? The `Max` priority.
 
-Links
-^^^^^
+== Links
 
-* mysqldump:  https://mariadb.com/kb/en/mysqldump/
+* https://mariadb.com/kb/en/mysqldump/[mysqldump] - a database backup program
+* https://en.wikipedia.org/wiki/Michael_Widenius[Michael Widenius] - the main author of the original version
