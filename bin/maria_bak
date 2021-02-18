@@ -37,8 +37,8 @@ progname=$(basename $0)
 
 # dirs & files
 
-home=/usr/local/maria_bak
-bakdir=/usr/local/backup/mariadb
+home=/usr/local/maria_bak/bin/maria_bak
+bakdir=/d0/backup/mariadb
 tmpdir=$home/tmp
 
 logf=$home/log/$progname.log
