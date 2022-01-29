@@ -19,6 +19,8 @@
 #     -p|--password <password>  : db password
 #     -D|--databases <dbs>      : db(s) to backup  [all]
 #                                 <dbs> : <db>(,<db>)*
+#     -x|--exclude <dbs>        : db(s) to exclude  []
+#                                 <dbs> : <db>(,<db>)*
 #     -s|--schema|--no-schema   : include|exclude schema tables  [exclude]
 #     -o|--options <mydumpopts> : mariadump options  []
 #     --bakdir <dir>            : backup destination directory  [.]
@@ -26,7 +28,7 @@
 #     --bzip2                   : compress via bzip2  [no]
 #     --xz                      : compress via xz  [no]
 # Author: Marco Broglia (marco.broglia@mutex.it)
-# Date: 2021.01.28
+# Date: 2022.01.29
 ----
 
 == Features

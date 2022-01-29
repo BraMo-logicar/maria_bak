@@ -17,6 +17,8 @@
 #     -p|--password <password>  : db password
 #     -D|--databases <dbs>      : db(s) to backup  [all]
 #                                 <dbs> : <db>(,<db>)*
+#     -x|--exclude <dbs>        : db(s) to exclude  []
+#                                 <dbs> : <db>(,<db>)*
 #     -s|--schema|--no-schema   : include|exclude schema tables  [exclude]
 #     -o|--options <mydumpopts> : mariadump options  []
 #     --bakdir <dir>            : backup destination directory  [.]
@@ -24,7 +26,7 @@
 #     --bzip2                   : compress via bzip2  [no]
 #     --xz                      : compress via xz  [no]
 # Author: Marco Broglia (marco.broglia@mutex.it)
-# Date: 2021.01.28
+# Date: 2022.01.29
 
 #
 # vars
@@ -50,12 +52,14 @@ mariadump=/usr/bin/mariadb-dump
 
 # localization
 
-LC_NUMERIC="C"
+LC_NUMERIC=C
 
 # vars
 
 mydumpopts="--databases --events --routines --flush-logs"
 mydumpopts+=" --single-transaction --log-error $logf"
+
+xdbs=logbin
 
 # queries
 
@@ -105,9 +109,9 @@ dbstat() {
 help=$(sed -n '/^# Usage:/,/^# [^ ]/p' $0 | sed '$d;s/^# //')
 Help=$(sed -n '/^# Options:/,/^# [^ ]/p' $0 | sed '$d;s/^# //')
 
-OPTS=$(getopt -o h:P:u:p:D:so:z \
-    -l help,Help,host:,port:,user:,password:,databases:,schema,no-schema \
-    -l options:,bakdir:,gzip,bzip2,xz \
+OPTS=$(getopt -o h:P:u:p:D:x:so:z \
+    -l help,Help,host:,port:,user:,password:,databases:,exclude:,schema
+    -l no-schema,options:,bakdir:,gzip,bzip2,xz \
     -n $progname -- "$@")
 eval set -- "$OPTS"
 
@@ -127,6 +131,8 @@ while :; do
             pass=$2; shift 2 ;;
         -D|--databases)
             dbs+=" $2"; shift 2 ;;
+        -x|--exclude)
+            xdbs+=" $2"; shift 2 ;;
         -s|--schema)
             schema=y; shift ;;
         --no-schema)
@@ -174,21 +180,23 @@ log "$($mariadb -V)"
 [ "$pass" ] && myopts+=" -p$pass"
 myopts=${myopts# }
 
-: ${schema:=n}
-
 opts="$myopts $mydumpopts"
 log "options: '${opts/# /}'"
 
 # dbs
 
 dbs0=$($mariadb $myopts -sN -e "$q_dblist" | sort | xargs)
-schemas=$(printf "%s\n" $dbs0 | grep '_schema$' | xargs)
+dbs=$(printf "%s\n" ${dbs//,/ } | sort -u | xargs)
+xdbs=$(printf "%s\n" ${xdbs//,/ } | sort -u | xargs)
+schemas=$(printf "%s\n" $dbs0 | grep '_schema$' | sort | xargs)
 
-[ "$dbs" ] && dbs=${dbs//,/ } || dbs=$dbs0
-[ "$schema" = y ] && dbs+=" $schemas"
-[ "$schema" = n ] && dbs=$(printf "%s\n" $dbs | grep -v _schema$ | xargs)
-
-dbs=$(printf "%s\n" $dbs | sort -u | xargs)
+if [ "$dbs" ]; then
+    [ "$schema" = y ] && dbs=$(printf "%s\n" $dbs $schemas | sort -u | xargs)
+else
+    [ "$schema" = y ] && dbs="$dbs0" || dbs=$(comm -23 <(printf "%s\n" $dbs0) \
+        <(printf "%s\n" $schemas) | xargs)
+fi
+dbs=$(comm -23 <(printf "%s\n" $dbs) <(printf "%s\n" $xdbs) | xargs)
 log "databases: '$dbs'"
 
 # backup area
