@@ -110,7 +110,7 @@ help=$(sed -n '/^# Usage:/,/^# [^ ]/p' $0 | sed '$d;s/^# //')
 Help=$(sed -n '/^# Options:/,/^# [^ ]/p' $0 | sed '$d;s/^# //')
 
 OPTS=$(getopt -o h:P:u:p:D:x:so:z \
-    -l help,Help,host:,port:,user:,password:,databases:,exclude:,schema
+    -l help,Help,host:,port:,user:,password:,databases:,exclude:,schema \
     -l no-schema,options:,bakdir:,gzip,bzip2,xz \
     -n $progname -- "$@")
 eval set -- "$OPTS"
