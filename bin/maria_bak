@@ -181,7 +181,7 @@ log "$($mariadb -V)"
 myopts=${myopts# }
 
 opts="$myopts $mydumpopts"
-log "options: '${opts/# /}'"
+log "mariadb options: '${opts/# /}'"
 
 # dbs
 
