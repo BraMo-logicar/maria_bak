@@ -1,6 +1,6 @@
 = maria_bak
 
-==usage
+== usage
 
 [source]
 ----
