@@ -1,5 +1,7 @@
 = maria_bak
 
+==usage
+
 [source]
 ----
 # Name: maria_bak - MySql/MariaDb backup
@@ -31,22 +33,22 @@
 # Date: 2022.01.29
 ----
 
-== Features
+== features
 
 * local and remote MySql and MariaDb dump
 * dump single, multiple, all databases
 * include or exclude schema tables
 * `gzip` or `bzip2` or `xz` compression (or no compression)
 * logging
-- database
-- database statistics
+  ** database
+  ** database statistics
 
 == My and Maria quotes
 
 [quote,BraMo]
 `My` backup or `Maria` backup ? The `Max` priority.
 
-== Links
+== links
 
 * https://mariadb.com/kb/en/mysqldump/[mysqldump] - a database backup program
 * https://en.wikipedia.org/wiki/Michael_Widenius[Michael Widenius] - the main author of the original version
