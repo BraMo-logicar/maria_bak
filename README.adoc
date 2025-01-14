@@ -43,7 +43,7 @@
   ** database
   ** database statistics
 
-== My and Maria quotes
+== quotes
 
 [quote,BraMo]
 `My` backup or `Maria` backup ? The `Max` priority.
